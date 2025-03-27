@@ -140,6 +140,7 @@ def evaluate(
         ].get_word_embedding_dimension(),
         pooling_mode=pooling_mode,
         whitening_transformer=whitening_transformer,
+        model_name=model_name
     )
     model[pooling_layer_index] = pooling
     task = MTEB(tasks=[task_name])
@@ -268,11 +269,11 @@ def main(
                 "in_batch": in_batch,
                 "task_name": task_name,
             }
-        for trnaform_name in TRANSFORM_CONFIG:
-            params["pooling_mode"]: List[str] = TRANSFORM_CONFIG[trnaform_name][
+        for transform_name in TRANSFORM_CONFIG:
+            params["pooling_mode"]: List[str] = TRANSFORM_CONFIG[transform_name][
                 "pooling"
             ]
-            whitening_transformer = TRANSFORM_CONFIG[trnaform_name][
+            whitening_transformer = TRANSFORM_CONFIG[transform_name][
                 "whitening_transformer_class"
             ]
             whitening_transformer = (

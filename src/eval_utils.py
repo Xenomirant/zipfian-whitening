@@ -400,7 +400,7 @@ def load_word2vec_model(model_name: str, from_text_file=False) -> SentenceTransf
     embedding = (
         WordEmbeddings.from_text_file(model_name + ".txt")
         if from_text_file
-        else WordEmbeddings.load(model_name)
+        else WordEmbeddings.load(f"{model_name}")
     )
     pooling = Pooling(embedding.get_word_embedding_dimension())
     model = SentenceTransformer(modules=[embedding, pooling])
