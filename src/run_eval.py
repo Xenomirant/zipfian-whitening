@@ -38,19 +38,33 @@ TRANSFORM_CONFIG = {
         "whitening_transformer_class": None,
         "pooling": [
             "mean",  # no whitening. normal mean pooling.
-            "raw_then_zipfian_whitening_norm",
-        ],
-    },
-    "uniform_whitening": {
+            # "raw_then_zipfian_whitening_norm",
+        ],},
+    "uniform_pca": {
         "whitening_transformer_class": UniformWhitening,
         "pooling": [
             "centering_only",
             "whitening",
             "uniform_centering_then_zipfian_whitening_norm",
             "uniform_whitening_then_zipfian_whitening_norm",
-        ],
-    },
-    "zipfian_whitening": {
+        ],},
+    # "uniform_zca": {
+    #     "whitening_transformer_class": UniformWhitening,
+    #     "pooling": [
+    #         "centering_only",
+    #         "whitening",
+    #         "uniform_centering_then_zipfian_whitening_norm",
+    #         "uniform_whitening_then_zipfian_whitening_norm",
+    #     ],},
+    # "uniform_cholesky": {
+    #     "whitening_transformer_class": UniformWhitening,
+    #     "pooling": [
+    #         "centering_only",
+    #         "whitening",
+    #         "uniform_centering_then_zipfian_whitening_norm",
+    #         "uniform_whitening_then_zipfian_whitening_norm",
+    #     ],},
+    "zipfian_pca": {
         "whitening_transformer_class": ZipfianWhitening,
         "pooling": [
             "centering_only",
@@ -58,13 +72,31 @@ TRANSFORM_CONFIG = {
             "raw_then_zipfian_whitening_dirction",
             "zipfian_whitening_then_uniform_centering_norm",
             "zipfian_whitening_then_uniform_whitening_norm",
-        ],
-    },
+        ],},
+    # "zipfian_zca": {
+    #     "whitening_transformer_class": ZipfianWhitening,
+    #     "pooling": [
+    #         "centering_only",
+    #         "whitening",
+    #         "raw_then_zipfian_whitening_dirction",
+    #         "zipfian_whitening_then_uniform_centering_norm",
+    #         "zipfian_whitening_then_uniform_whitening_norm",
+    #     ],},
+    # "zipfian_cholesky": {
+    #     "whitening_transformer_class": ZipfianWhitening,
+    #     "pooling": [
+    #         "centering_only",
+    #         "whitening",
+    #         "raw_then_zipfian_whitening_dirction",
+    #         "zipfian_whitening_then_uniform_centering_norm",
+    #         "zipfian_whitening_then_uniform_whitening_norm",
+    #     ],},
     "abtp": {
         "whitening_transformer_class": AllButTheTop,
         "pooling": ["component_removal"],
     },
 }
+
 MODEL_NAME_TO_WRAPPED_TOKENIZER = {
     "models/GoogleNews-vectors-negative300-torch": WrappedTokenizer,
     "sentence-transformers/average_word_embeddings_glove.840B.300d": WrappedTokenizer,
@@ -87,6 +119,17 @@ MODEL_NAME_TO_FREQ_FUNC_IN_BATCH = {
     "sentence-transformers/average_word_embeddings_glove.840B.300d": load_unigram_prob_in_batch,
 }
 
+# TASK_NAME_TO_SPLIT_NAME = {
+#     "STSBenchmark": "test",
+#     "SICK-R": "test",
+#     "STS12": "test",
+#     "STS13": "test",
+#     "STS14": "test",
+#     "STS15": "test",
+#     "STS16": "test",
+#     # "JSTS": "validation",  # XXX: eval split is set on validation in MTEB
+# }
+
 TASK_NAME_TO_SPLIT_NAME = {
     "STSBenchmark": "test",
     "SICK-R": "test",
@@ -95,8 +138,15 @@ TASK_NAME_TO_SPLIT_NAME = {
     "STS14": "test",
     "STS15": "test",
     "STS16": "test",
-    "JSTS": "validation",  # XXX: eval split is set on validation in MTEB
-}
+    "STS17": "test",
+    "STS22.v2": "test",
+    "ArXivHierarchicalClusteringS2S": "test",
+    "TwitterSemEval2015": "test",
+    "MedrxivClusteringS2S.v2": "test",
+    "SummEvalSummarization.v2": "test",
+    "Touche2020Retrieval.v3": "test",
+    "AmazonCounterfactualClassification": "test"
+}`
 
 
 def evaluate(
@@ -104,31 +154,34 @@ def evaluate(
     model_name: str,
     task_name: str,
     whitening_transformer: Union[UniformWhitening, ZipfianWhitening],
+    whitening_name: str,
     pooling_mode: str,
     embedding_layer_index: int = 0,
     pooling_layer_index: int = 1,
+    whitening_mode: Optional[str] = None,
     topk: Optional[int] = None,
     in_batch: bool = False,
+    **kwargs
 ):
     # save_dir name rule:
     # {model_name}/{task_name}/{whitening_transformer_name (e.g., zipfian_whitening, ...)}/{pooling_mode}/{topk}
     model_name = Path(model_name).name  # remove "SentenceTransformer/" prefix
     if in_batch:
         model_name = f"{model_name}_in_batch"
-    if whitening_transformer is None:
-        whitening_name = "normal"
-    elif isinstance(whitening_transformer, ZipfianWhitening):
-        whitening_name = "zipfian_whitening"
-    elif isinstance(whitening_transformer, UniformWhitening):
-        whitening_name = "uniform_whitening"
-    elif isinstance(whitening_transformer, AllButTheTop):
-        whitening_name = "abtp"
-    elif isinstance(whitening_transformer, SIF):
-        whitening_name = "sif"
-    else:
-        raise NotImplementedError(
-            'Only "ZipfianWhitening" and "UniformWhitening" and "AllButTheTop" and "SIF" are supported.'
-        )
+    # if whitening_transformer is None:
+    #     whitening_name = "normal"
+    # elif isinstance(whitening_transformer, ZipfianWhitening):
+    #     whitening_name = "zipfian_whitening"
+    # elif isinstance(whitening_transformer, UniformWhitening):
+    #     whitening_name = "uniform_whitening"
+    # elif isinstance(whitening_transformer, AllButTheTop):
+    #     whitening_name = "abtp"
+    # elif isinstance(whitening_transformer, SIF):
+    #     whitening_name = "sif"
+    # else:
+    #     raise NotImplementedError(
+    #         'Only "ZipfianWhitening" and "UniformWhitening" and "AllButTheTop" and "SIF" are supported.'
+    #     )
     save_dir_name = (
         f"results/{model_name}/{task_name}/{whitening_name}/{pooling_mode}"
         if topk is None
@@ -140,6 +193,7 @@ def evaluate(
         ].get_word_embedding_dimension(),
         pooling_mode=pooling_mode,
         whitening_transformer=whitening_transformer,
+        whitening_mode=whitening_mode,
         model_name=model_name
     )
     model[pooling_layer_index] = pooling
@@ -270,20 +324,29 @@ def main(
                 "task_name": task_name,
             }
         for transform_name in TRANSFORM_CONFIG:
+            # set as default
+            whitening_mode = None
+
             params["pooling_mode"]: List[str] = TRANSFORM_CONFIG[transform_name][
                 "pooling"
             ]
             whitening_transformer = TRANSFORM_CONFIG[transform_name][
                 "whitening_transformer_class"
             ]
+            if whitening_transformer is not None:
+                if issubclass(whitening_transformer, UniformWhitening) or issubclass(whitening_transformer, ZipfianWhitening):
+                    _, whitening_mode = transform_name.rsplit("_", 1)
+
             whitening_transformer = (
                 None
                 if whitening_transformer is None
-                else whitening_transformer().fit(
+                else whitening_transformer(mode=whitening_mode).fit(
                     embedding_for_whitening, p=unigramprob_tensor
                 )
             )
             params["whitening_transformer"] = whitening_transformer
+            params["whitening_name"] = transform_name
+            params["whitening_mode"] = whitening_mode
             for pooling_mode in params["pooling_mode"]:
                 params["pooling_mode"] = pooling_mode
                 evaluate(**params)
@@ -313,6 +376,7 @@ def main(
             model_name=model_name,
             task_name=task_name,
             whitening_transformer=sif,
+            whitening_name="sif",
             pooling_mode=pooling_mode,
             embedding_layer_index=embedding_layer_index,
             pooling_layer_index=pooling_layer_index,

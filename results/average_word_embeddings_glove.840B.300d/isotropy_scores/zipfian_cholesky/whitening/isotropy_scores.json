@@ -1,0 +1,1 @@
+{"model_name": "average_word_embeddings_glove.840B.300d", "whitening_name": "zipfian_cholesky", "pooling_mode": "whitening", "sym1": 0.9999979734420776, "sym2": 1.0, "sym1_uniform": 0.8977729678153992, "sym2_uniform": 0.9706882834434509, "cosine": 0.988571580289863, "iso_score": 0.7586103554628879}

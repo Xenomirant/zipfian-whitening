@@ -69,40 +69,40 @@ def main(
     W_norm = torch.norm(embedding_for_whitening, dim=1).tolist()
     results["norm"] = W_norm
 
-    ### Uniform
-    uniform_whitening = UniformWhitening().fit(embedding_for_whitening, None)
-    ## Centering only
-    W_uniform_centered = embedding_for_whitening - uniform_whitening.mu
-    W_uniform_centered_norm = torch.norm(W_uniform_centered, dim=1).tolist()
-    sim1_uniform = calc_uniform_isotropy_score(W_uniform_centered)[0]
-    print(f"Uniform sim1: {sim1_uniform}")
-    results["uniform_centered_norm"] = W_uniform_centered_norm
-    # Whitening
-    W_uniform_whitened = W_uniform_centered @ uniform_whitening.transformation_matrix
-    W_uniform_whitened_norm = torch.norm(W_uniform_whitened, dim=1).tolist()
-    results["uniform_whitened_norm"] = W_uniform_whitened_norm
-    sim2_uniform = calc_uniform_isotropy_score(W_uniform_whitened)[1]
-    print(f"Uniform sim2: {sim2_uniform}")
-    ### Zipfian
-    zipfian_whitening = ZipfianWhitening().fit(
-        embedding_for_whitening, unigramprob_tensor
-    )
-    # Centering only
-    W_zipfian_centered = embedding_for_whitening - zipfian_whitening.mu
-    W_zipfian_centered_norm = torch.norm(W_zipfian_centered, dim=1).tolist()
-    results["zipfian_centered_norm"] = W_zipfian_centered_norm
-    sim1_zipfian = calc_zipfian_isotropy_score(W_zipfian_centered, unigramprob_tensor)[
-        0
-    ]
-    print(f"Zipfian sim1: {sim1_zipfian}")
-    # Whitening
-    W_zipfian_whitened = W_zipfian_centered @ zipfian_whitening.transformation_matrix
-    W_zipfian_whitened_norm = torch.norm(W_zipfian_whitened, dim=1).tolist()
-    sim2_zipfian = calc_zipfian_isotropy_score(W_zipfian_whitened, unigramprob_tensor)[
-        1
-    ]
-    print(f"Zipfian sim2: {sim2_zipfian}")
-    results["zipfian_whitened_norm"] = W_zipfian_whitened_norm
+    for whitening_mode in ["PCA", "ZCA", "Cholesky"]:
+        ### Uniform
+        uniform_whitening = UniformWhitening(mode=whitening_mode).fit(embedding_for_whitening, None)
+        ## Centering only
+        W_uniform_centered = embedding_for_whitening - uniform_whitening.mu
+        W_uniform_centered_norm = torch.norm(W_uniform_centered, dim=1).tolist()
+        sim1_uniform = calc_uniform_isotropy_score(W_uniform_centered)[0]
+        results[f"uniform_{whitening_mode}_centered_norm"] = W_uniform_centered_norm
+        print(f"Uniform {whitening_mode} sim1: {sim1_uniform}")
+        # Whitening
+        W_uniform_whitened = W_uniform_centered @ uniform_whitening.transformation_matrix
+        W_uniform_whitened_norm = torch.norm(W_uniform_whitened, dim=1).tolist()
+        results[f"uniform_{whitening_mode}_whitened_norm"] = W_uniform_whitened_norm
+        sim2_uniform = calc_uniform_isotropy_score(W_uniform_whitened)[1]
+        print(f"Uniform {whitening_mode} sim2: {sim2_uniform}")
+
+
+        ### Zipfian
+        zipfian_whitening = ZipfianWhitening(mode=whitening_mode).fit(
+            embedding_for_whitening, unigramprob_tensor
+        )
+        # Centering only
+        W_zipfian_centered = embedding_for_whitening - zipfian_whitening.mu
+        W_zipfian_centered_norm = torch.norm(W_zipfian_centered, dim=1).tolist()
+        results[f"zipfian_{whitening_mode}_centered_norm"] = W_zipfian_centered_norm
+        sim1_zipfian = calc_zipfian_isotropy_score(W_zipfian_centered, unigramprob_tensor)[0]
+        print(f"Zipfian {whitening_mode} sim1: {sim1_zipfian}")
+        # Whitening
+        W_zipfian_whitened = W_zipfian_centered @ zipfian_whitening.transformation_matrix
+        W_zipfian_whitened_norm = torch.norm(W_zipfian_whitened, dim=1).tolist()
+        sim2_zipfian = calc_zipfian_isotropy_score(W_zipfian_whitened, unigramprob_tensor)[1]
+        results[f"zipfian_{whitening_mode}_whitened_norm"] = W_zipfian_whitened_norm
+        print(f"Zipfian {whitening_mode} sim2: {sim2_zipfian}")
+
 
     # Dump results to json
     model_name = Path(model_name).name  # remove "SentenceTransformer/" prefix

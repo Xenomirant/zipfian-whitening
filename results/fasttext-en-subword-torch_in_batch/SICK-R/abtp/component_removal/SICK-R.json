@@ -4,17 +4,17 @@
   "mteb_version": "1.10.1",
   "test": {
     "cos_sim": {
-      "pearson": 0.605776343517963,
-      "spearman": 0.5548884169112219
+      "pearson": 0.6057763476438591,
+      "spearman": 0.5548884489765887
     },
     "euclidean": {
-      "pearson": 0.5617319218414137,
-      "spearman": 0.521760922756704
+      "pearson": 0.5617319194819654,
+      "spearman": 0.5217617731623212
     },
-    "evaluation_time": 11.59,
+    "evaluation_time": 3.22,
     "manhattan": {
-      "pearson": 0.5903526640268704,
-      "spearman": 0.5431714360141114
+      "pearson": 0.5903526656358886,
+      "spearman": 0.5431722933023826
     }
   }
 }

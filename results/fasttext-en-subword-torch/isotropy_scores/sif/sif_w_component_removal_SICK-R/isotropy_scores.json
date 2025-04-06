@@ -1,0 +1,1 @@
+{"model_name": "fasttext-en-subword-torch", "whitening_name": "sif", "pooling_mode": "sif_w_component_removal_SICK-R", "sym1": 0.5564765930175781, "sym2": 0.856189489364624, "sym1_uniform": 0.6031184792518616, "sym2_uniform": 0.924420177936554, "cosine": 0.8360977306962013, "iso_score": 0.2915636814043833}

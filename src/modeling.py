@@ -8,27 +8,27 @@ from torch import Tensor, nn
 from torchtyping import TensorType as TT
 
 
-def load_zipfian_whitening_norm(model_name: str) -> TT["num_words"]:
+def load_zipfian_whitening_norm(whitening_mode: str, model_name: str) -> TT["num_words"]:
     """
     Helper function to load the zipfian whitening norm for the given model.
     """
-    load_path = f"data/norm/zipfian/whitening/{model_name}.pt"
+    load_path = f"data/norm/zipfian_{whitening_mode}/whitening/{model_name}.pt"
     return torch.load(load_path)
 
 
-def load_uniform_centering_norm(model_name: str) -> TT["num_words"]:
+def load_uniform_centering_norm(whitening_mode: str, model_name: str) -> TT["num_words"]:
     """
     Helper function to load the uniform centering norm for the given model.
     """
-    load_path = f"data/norm/uniform/centering/{model_name}.pt"
+    load_path = f"data/norm/uniform_{whitening_mode}/centering/{model_name}.pt"
     return torch.load(load_path)
 
 
-def load_uniform_whitening_norm(model_name: str) -> TT["num_words"]:
+def load_uniform_whitening_norm(whitening_mode: str, model_name: str) -> TT["num_words"]:
     """
     Helper function to load the uniform whitening norm for the given model.
     """
-    load_path = f"data/norm/uniform/whitening/{model_name}.pt"
+    load_path = f"data/norm/uniform_{whitening_mode}/whitening/{model_name}.pt"
     return torch.load(load_path)
 
 
@@ -97,11 +97,13 @@ class CustomPooling(nn.Module):
         pooling_mode_raw_then_zipfian_whitening_dirction: bool = False,
         include_prompt=True,
         whitening_transformer=None,
+        whitening_mode=None,
         weights=None,
         model_name: Optional[str] = None,
     ) -> None:
         super(CustomPooling, self).__init__()
         self.whitening_transformer = whitening_transformer
+        self.whitening_mode = whitening_mode
         self.weights = weights  # weights for the weighted mean pooling (SIF)
         self.config_keys = [
             "word_embedding_dimension",
@@ -488,7 +490,7 @@ class CustomPooling(nn.Module):
         #####################################################################
         if self.pooling_mode_uniform_centering_then_zipfian_whitening_norm:
             zipfian_whitening_norm: TT["num_words"] = load_zipfian_whitening_norm(
-                self.model_name
+                self.whitening_mode, self.model_name
             )
             # look up the zipfian whitening norm for input_ids
             # Inputs : zipfian_whitening_norm: TT["num_words"]
@@ -534,7 +536,7 @@ class CustomPooling(nn.Module):
         #####################################################################
         if self.pooling_mode_uniform_whitening_then_zipfian_whitening_norm:
             zipfian_whitening_norm: TT["num_words"] = load_zipfian_whitening_norm(
-                self.model_name
+                self.whitening_mode, self.model_name
             )
             # look up the zipfian whitening norm for input_ids
             # Inputs : zipfian_whitening_norm: TT["num_words"]
@@ -586,7 +588,7 @@ class CustomPooling(nn.Module):
         #####################################################################
         if self.pooling_mode_zipfian_whitening_then_uniform_centering_norm:
             uniform_centering_norm: TT["num_words"] = load_uniform_centering_norm(
-                self.model_name
+                self.whitening_mode ,self.model_name
             )
             # look up the uniform centering norm for input_ids
             # Inputs : uniform_centering_norm: TT["num_words"]
@@ -640,7 +642,7 @@ class CustomPooling(nn.Module):
         #####################################################################
         if self.pooling_mode_zipfian_whitening_then_uniform_whitening_norm:
             uniform_whitening_norm: TT["num_words"] = load_uniform_whitening_norm(
-                self.model_name
+                self.whitening_mode, self.model_name
             )
             # look up the uniform whitening norm for input_ids
             # Inputs : uniform_whitening_norm: TT["num_words"]
@@ -695,7 +697,7 @@ class CustomPooling(nn.Module):
         if self.pooling_mode_raw_then_zipfian_whitening_norm:
             # get zipfian whitening norm
             zipfian_whitening_norm: TT["num_words"] = load_zipfian_whitening_norm(
-                self.model_name
+                self.whitening_mode, self.model_name
             )
             # look up the zipfian whitening norm for input_ids
             # Inputs : zipfian_whitening_norm: TT["num_words"]

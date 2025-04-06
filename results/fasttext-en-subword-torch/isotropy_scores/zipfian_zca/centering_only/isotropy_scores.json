@@ -1,0 +1,1 @@
+{"model_name": "fasttext-en-subword-torch", "whitening_name": "zipfian_zca", "pooling_mode": "centering_only", "sym1": 0.9999983906745911, "sym2": 0.702448844909668, "sym1_uniform": 0.5577159523963928, "sym2_uniform": 0.9230115413665771, "cosine": 0.7799636572599411, "iso_score": 0.2869237206536478}

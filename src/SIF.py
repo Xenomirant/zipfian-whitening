@@ -40,6 +40,7 @@ class SIF:
         components_threshhold: int = 1,
         a: float = 10 ** (-3),
         data_split="test",  # test for STS-Benchmark, validation for word-level tasks
+        **kwargs
     ):
         pooling_layer_index = -1
         embedding_layer_index = 0

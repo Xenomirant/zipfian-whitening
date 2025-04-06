@@ -1,6 +1,7 @@
 from typing import Optional
 
 import torch
+from typing import Literal
 from torchtyping import TensorType as TT
 
 
@@ -53,8 +54,9 @@ class BaseWhitening:
 
 
 class ZipfianWhitening(BaseWhitening):
-    def __init__(self, save_whitened_W: bool = False):
+    def __init__(self, mode: Literal["PCA", "ZCA", "Cholesky"] = "PCA", save_whitened_W: bool = False):
         super().__init__(save_whitened_W)
+        self.whitening_mode = mode.lower()
 
     def fit(
         self, W: TT["num_words", "hidden_dim"], p: TT["num_words"]
@@ -64,14 +66,22 @@ class ZipfianWhitening(BaseWhitening):
         W_centered: TT["num_words", "hidden_dim"] = W - mu
         Wp: TT["num_words"] = W_centered * torch.sqrt(
             p[:, None]
-        )  # TODO: check this out why it's not working
+        )
 
         U, S, Vt = torch.linalg.svd(Wp, full_matrices=False)
         S_inv = torch.diag(torch.reciprocal(S))
         V = Vt.T
         self.V = V
         self.S_inv = S_inv
-        self.transformation_matrix = V @ S_inv
+        match self.whitening_mode:
+            case "pca":
+                self.transformation_matrix = V @ S_inv
+            case "zca":
+                self.transformation_matrix = V @ S_inv @ Vt
+            case "cholesky":
+                self.transformation_matrix = torch.linalg.qr(V @ S_inv @ Vt, mode="r").R.T
+            case _:
+                raise ValueError(f"Whitening mode {self.whitening_mode} not implemented")
         self.whitened_W = (
             Wp @ self.transformation_matrix if self.save_whitened_W else None
         )
@@ -81,8 +91,9 @@ class ZipfianWhitening(BaseWhitening):
 
 
 class UniformWhitening(BaseWhitening):
-    def __init__(self, save_whitened_W: bool = False):
+    def __init__(self, mode: Literal["PCA", "ZCA", "Cholesky"] = "PCA", save_whitened_W: bool = False):
         super().__init__(save_whitened_W)
+        self.whitening_mode=mode.lower()
 
     def fit(
         self, W: TT["num_words", "hidden_dim"], p: TT["num_words"]
@@ -98,7 +109,15 @@ class UniformWhitening(BaseWhitening):
         V = Vt.T
         self.V = V
         self.S_inv = S_inv
-        self.transformation_matrix = V @ S_inv
+        match self.whitening_mode:
+            case "pca":
+                self.transformation_matrix = V @ S_inv
+            case "zca":
+                self.transformation_matrix = V @ S_inv @ Vt
+            case "cholesky":
+                self.transformation_matrix = torch.linalg.qr(V @ S_inv @ Vt, mode="r").R.T
+            case _:
+                raise ValueError(f"Whitening mode {self.whitening_mode} not implemented")
         self.whitened_W = (
             W_centered @ self.transformation_matrix if self.save_whitened_W else None
         )

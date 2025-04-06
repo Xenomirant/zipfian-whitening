@@ -48,6 +48,7 @@ class WhiteningMatrixCalculator(object):
         device,
         max_length,
         pooler,
+        whitening_mode=None,
         chunk_size=1000,
     ):
         self.pooler = pooler
@@ -56,6 +57,7 @@ class WhiteningMatrixCalculator(object):
             if ("zipfian" in pooler or "pseudo-uniform" in pooler)
             else (UniformWhitening if "uniform" in pooler else None)
         )  # NOTE: if the whitening_class is None, then whitening computation will be skipped
+        self.whitening_mode = whitening_mode
 
         self.model = model
         self.tokenizer = tokenizer
@@ -208,17 +210,25 @@ class WhiteningMatrixCalculator(object):
             V_B = torch.unique(filtered_input_ids).size(0)
             p = 1 / (prob_filtered.unsqueeze(-1) * V_B).squeeze().to(torch.float)
 
-            first_layer_whitening = self.whitening_class().fit(filtered_first_hidden, p)
-            last_layer_whitening = self.whitening_class().fit(filtered_last_hidden, p)
+            first_layer_whitening = self.whitening_class(
+                mode=self.whitening_mode
+                ).fit(filtered_first_hidden, p)
+            last_layer_whitening = self.whitening_class(
+                mode=self.whitening_mode
+                ).fit(filtered_last_hidden, p)
 
             self.first_layer_whitening = first_layer_whitening
             self.last_layer_whitening = last_layer_whitening
         elif "uniform" in self.pooler:
             p = None
-            first_layer_whitening = self.whitening_class().fit(
+            first_layer_whitening = self.whitening_class(
+                mode=self.whitening_mode
+                ).fit(
                 self.filtered_first_hidden, p
             )
-            last_layer_whitening = self.whitening_class().fit(
+            last_layer_whitening = self.whitening_class(
+                mode=self.whitening_mode
+                ).fit(
                 self.filtered_last_hidden, p
             )
             self.first_layer_whitening = first_layer_whitening
@@ -255,6 +265,13 @@ def main():
         choices=["dev", "test", "fasttest"],
         default="test",
         help="What evaluation mode to use (dev: fast mode, dev results; test: full mode, test results); fasttest: fast mode, test results",
+    )
+    parser.add_argument(
+        "--whitening_mode",
+        type=str,
+        choices=["pca", "zca", "cholesky", None],
+        default=None,
+        help="What whitening type to use ('PCA', 'ZCA', 'cholesky', None)"
     )
     parser.add_argument(
         "--task_set",
@@ -343,6 +360,8 @@ def main():
     else:
         raise NotImplementedError
 
+    whitening_mode = args.whitening_mode
+
     dynamic_whitening_calculator = WhiteningMatrixCalculator(
         model=model,
         tokenizer=tokenizer,
@@ -350,6 +369,7 @@ def main():
         max_length=None,
         pooler=args.pooler,
         chunk_size=1000,
+        whitening_mode=whitening_mode
     )
 
     whitening_calculator = dynamic_whitening_calculator

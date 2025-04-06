@@ -54,11 +54,12 @@ TRANSFORM_CONFIG = {
 }
 
 
-def main(model_name: str, topk: Optional[int] = None) -> None:
+def main(model_name: str, whitening_mode: str, topk: Optional[int] = None) -> None:
     print(f"topk: {topk}")
     # Note: maybe won't work for BERT-based models, need model specific config
     embedding_layer_index = 0
     pooling_layer_index = 1
+    whitening_mode = whitening_mode.lower()
 
     if model_name == "models/GoogleNews-vectors-negative300":
         model: SentenceTransformer = load_word2vec_model(
@@ -103,26 +104,31 @@ def main(model_name: str, topk: Optional[int] = None) -> None:
     }
 
     # Fit Zipfian whitening
-    whitening_transformer = ZipfianWhitening().fit(
+    whitening_transformer = ZipfianWhitening(mode=whitening_mode).fit(
         embedding_for_whitening, p=unigramprob_tensor
     )
 
     # Apply Zipfian whitening to word embeddings
     original_word_embeddings = model[embedding_layer_index].emb_layer.weight
+
+    # 1. Centering
     original_word_embeddings -= whitening_transformer.mu
-    original_word_embeddings = (
-        original_word_embeddings @ whitening_transformer.transformation_matrix
-    )
-
-    # Calculate norm
     norm = torch.linalg.norm(original_word_embeddings, dim=1)
-
-    # save torch tensor of norm
-    # create parent path
-    save_path = f"data/norm/zipfian/whitening/{model_name.split('/')[-1]}.pt"
+    save_path = f"data/norm/zipfian_{whitening_mode}/centering/{model_name.split('/')[-1]}.pt"
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
     torch.save(norm, save_path)
 
+    # 2. Whitening
+    original_word_embeddings = (
+        original_word_embeddings @ whitening_transformer.transformation_matrix
+    )
+    # Calculate norm
+    norm = torch.linalg.norm(original_word_embeddings, dim=1)
+    # save torch tensor of norm
+    # create parent path
+    save_path = f"data/norm/zipfian_{whitening_mode}/whitening/{model_name.split('/')[-1]}.pt"
+    Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+    torch.save(norm, save_path)
 
 if __name__ == "__main__":
     Fire(main)

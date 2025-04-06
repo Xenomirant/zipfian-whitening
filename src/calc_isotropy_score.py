@@ -1,5 +1,6 @@
 import json
 import re
+import math
 from dataclasses import dataclass
 from pathlib import Path
 from pprint import pprint
@@ -27,23 +28,52 @@ from eval_utils import (
     remove_unused_words,
 )
 from IsoScore import IsoScore
-from modeling import CustomPooling
 from SIF import SIF
 from zipfian_whitening import UniformWhitening, ZipfianWhitening
+
 
 TRANSFORM_CONFIG = {
     "normal": {
         "whitening_transformer_class": None,
-        "pooling": ["mean"],
-    },  # no whitening. normal mean pooling.
-    "uniform_whitening": {
+        "pooling": [
+            "mean",  # no whitening. normal mean pooling.
+        ],},
+    "uniform_pca": {
         "whitening_transformer_class": UniformWhitening,
-        "pooling": ["centering_only", "whitening"],
-    },
-    "zipfian_whitening": {
+        "pooling": [
+            "centering_only",
+            "whitening",
+        ],},
+    # "uniform_zca": {
+    #     "whitening_transformer_class": UniformWhitening,
+    #     "pooling": [
+    #         "centering_only",
+    #         "whitening",
+    #     ],},
+    # "uniform_cholesky": {
+    #     "whitening_transformer_class": UniformWhitening,
+    #     "pooling": [
+    #         "centering_only",
+    #         "whitening",
+    #     ],},
+    "zipfian_pca": {
         "whitening_transformer_class": ZipfianWhitening,
-        "pooling": ["centering_only", "whitening"],
-    },
+        "pooling": [
+            "centering_only",
+            "whitening",
+        ],},
+    # "zipfian_zca": {
+    #     "whitening_transformer_class": ZipfianWhitening,
+    #     "pooling": [
+    #         "centering_only",
+    #         "whitening",
+    #     ],},
+    # "zipfian_cholesky": {
+    #     "whitening_transformer_class": ZipfianWhitening,
+    #     "pooling": [
+    #         "centering_only",
+    #         "whitening",
+    #     ],},
     "abtp": {
         "whitening_transformer_class": AllButTheTop,
         "pooling": ["component_removal"],
@@ -51,6 +81,16 @@ TRANSFORM_CONFIG = {
 }
 # Downloaded from: https://github.com/kawine/usif/raw/71ffef5b6d7295c36354136bfc6728a10bd25d32/enwiki_vocab_min200.txt
 PATH_ENWIKI_VOCAB_MIN200 = "data/enwiki_vocab_min200/enwiki vocab min200.txt"
+
+# TASK_NAME_TO_SPLIT_NAME = {
+#     "STSBenchmark": "test",
+#     "SICK-R": "test",
+#     "STS12": "test",
+#     "STS13": "test",
+#     "STS14": "test",
+#     "STS15": "test",
+#     "STS16": "test",
+# }
 
 TASK_NAME_TO_SPLIT_NAME = {
     "STSBenchmark": "test",
@@ -60,7 +100,14 @@ TASK_NAME_TO_SPLIT_NAME = {
     "STS14": "test",
     "STS15": "test",
     "STS16": "test",
-    "JSTS": "validation",  # XXX: eval split is set on validation in MTEB
+    "STS17": "test",
+    "STS22.v2": "test",
+    "ArXivHierarchicalClusteringS2S": "test",
+    "TwitterSemEval2015": "test",
+    "MedrxivClusteringS2S.v2": "test",
+    "SummEvalSummarization.v2": "test",
+    "Touche2020Retrieval.v3": "test",
+    "AmazonCounterfactualClassification": "test"
 }
 
 
@@ -121,6 +168,7 @@ def cos_sim(v1, v2):
     return torch.dot(v1, v2) / (torch.linalg.norm(v1) * torch.linalg.norm(v2))
 
 
+# used running mean insted of concatination
 def calc_cosine_score(W: torch.Tensor, n: int = 4) -> float:
     # XXX: If CUDA OOM error occurs, enlarge the n value.
 
@@ -130,7 +178,8 @@ def calc_cosine_score(W: torch.Tensor, n: int = 4) -> float:
     # Split the tensor into n parts
     splits = torch.split(W_norm, W_norm.shape[0] // n + 1)
 
-    all_cos_sim = []
+    cos_sim_mean = 0
+    counter = 1
 
     # Compute cosine similarities within and between splits
     for i in tqdm(range(len(splits))):
@@ -140,20 +189,20 @@ def calc_cosine_score(W: torch.Tensor, n: int = 4) -> float:
                 triu_indices = torch.triu_indices(
                     cos_sim_ij.shape[0], cos_sim_ij.shape[1], offset=1
                 )
-                all_cos_sim.append(cos_sim_ij[triu_indices[0], triu_indices[1]].cpu())
+                cos_sim_mean = cos_sim_mean * (counter-1)/counter + cos_sim_ij[triu_indices[0], triu_indices[1]].mean().item()/counter
+                counter += 1
             else:
-                all_cos_sim.append(cos_sim_ij.view(-1).cpu())
+                cos_sim_mean = cos_sim_mean * (counter-1)/counter + cos_sim_ij.mean().item()/counter
+                counter += 1
 
-    # Concatenate all cosine similarities
-    all_cos_sim = torch.cat(all_cos_sim)
-
-    return 1 - all_cos_sim.mean().item()
+    return 1 - cos_sim_mean
 
 
 def evaluate_isotropy_scores(
     model: SentenceTransformer,
     model_name: str,
     whitening_transformer: Union[UniformWhitening, ZipfianWhitening],
+    whitening_name: str,
     pooling_mode: str,
     unigramprob_tensor: TT["num_words"],
     embedding_for_whitening: TT["num_words", "hidden_dim"],
@@ -165,9 +214,10 @@ def evaluate_isotropy_scores(
     model_name = Path(model_name).name  # remove "SentenceTransformer/" prefix
     embedding_matrix = embedding_for_whitening  # Only consider the embeddings of the words in the frequency list.
     if whitening_transformer is None:
-        whitening_name = "normal"
+        # whitening_name = "normal"
+        pass
     elif isinstance(whitening_transformer, ZipfianWhitening):
-        whitening_name = "zipfian_whitening"
+        # whitening_name = "zipfian_whitening"
         if pooling_mode == "centering_only":
             embedding_matrix = embedding_matrix - whitening_transformer.mu
         elif pooling_mode == "whitening":
@@ -180,7 +230,7 @@ def evaluate_isotropy_scores(
                 'Only "centering_only" and "whitening" pooling modes are supported for ZipfianWhitening.'
             )
     elif isinstance(whitening_transformer, UniformWhitening):
-        whitening_name = "uniform_whitening"
+        # whitening_name = "uniform_whitening"
         if pooling_mode == "centering_only":
             embedding_matrix = embedding_matrix - whitening_transformer.mu
         elif pooling_mode == "whitening":
@@ -193,7 +243,7 @@ def evaluate_isotropy_scores(
                 'Only "centering_only" and "whitening" pooling modes are supported for UniformWhitening.'
             )
     elif isinstance(whitening_transformer, AllButTheTop):
-        whitening_name = "abtp"
+        # whitening_name = "abtp"
         if pooling_mode == "component_removal":
             embedding_matrix = embedding_matrix - whitening_transformer.mu
             embedding_matrix = (
@@ -206,7 +256,7 @@ def evaluate_isotropy_scores(
                 'Only "component_removal" pooling mode is supported for AllButTheTop.'
             )
     elif isinstance(whitening_transformer, SIF):
-        whitening_name = "sif"
+        # whitening_name = "sif"
         if pooling_mode == "sif_w_component_removal":
             embedding_matrix = (
                 model[embedding_layer_index].emb_layer.weight
@@ -244,8 +294,10 @@ def evaluate_isotropy_scores(
     save_dir_name = (
         f"results/{model_name}/isotropy_scores/{whitening_name}/{pooling_mode}"
     )
+
     sim1, sim2 = calc_zipfian_isotropy_score(embedding_matrix, unigramprob_tensor)
     sim1_uniform, sim2_uniform = calc_uniform_isotropy_score(embedding_matrix)
+
     cos_score = calc_cosine_score(embedding_matrix)
     iso_score = IsoScore(embedding_matrix)
     # save the results as json
@@ -321,19 +373,27 @@ def main(model_name: str, topk: Optional[int] = None) -> None:
         "unigramprob_tensor": unigramprob_tensor,
     }
     # for non-sif methods
-    for trnaform_name in TRANSFORM_CONFIG:
-        params["pooling_mode"]: List[str] = TRANSFORM_CONFIG[trnaform_name]["pooling"]
-        whitening_transformer = TRANSFORM_CONFIG[trnaform_name][
+    for transform_name in TRANSFORM_CONFIG:
+        # set as default
+        whitening_mode = None
+
+        params["pooling_mode"]: List[str] = TRANSFORM_CONFIG[transform_name]["pooling"]
+        whitening_transformer = TRANSFORM_CONFIG[transform_name][
             "whitening_transformer_class"
         ]
+        if whitening_transformer is not None:
+            if issubclass(whitening_transformer, UniformWhitening) or issubclass(whitening_transformer, ZipfianWhitening):
+                _, whitening_mode = transform_name.rsplit("_", 1)
+
         whitening_transformer = (
             None
             if whitening_transformer is None
-            else whitening_transformer().fit(
+            else whitening_transformer(mode=whitening_mode).fit(
                 embedding_for_whitening, p=unigramprob_tensor
             )
         )
         params["whitening_transformer"] = whitening_transformer
+        params["whitening_name"] = transform_name
         for pooling_mode in params["pooling_mode"]:
             params["pooling_mode"] = pooling_mode
             evaluate_isotropy_scores(**params)
@@ -347,7 +407,7 @@ def main(model_name: str, topk: Optional[int] = None) -> None:
 
     unigramprob_tensor[list(unsued_vocab_ids)] = 0
     unigramprob_tensor = unigramprob_tensor / unigramprob_tensor.sum()
-    assert unigramprob_tensor.sum() == 1
+    assert torch.allclose(unigramprob_tensor.sum(), torch.tensor(1.0))
     model.tokenizer.original_tokenizer.stop_words = {
         model.tokenizer.vocab[index] for index in unsued_vocab_ids
     }
@@ -359,6 +419,7 @@ def main(model_name: str, topk: Optional[int] = None) -> None:
             model=model,
             model_name=model_name,
             whitening_transformer=sif,
+            whitening_name="sif",
             pooling_mode=pooling_mode,
             embedding_layer_index=embedding_layer_index,
             pooling_layer_index=pooling_layer_index,

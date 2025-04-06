@@ -7,7 +7,7 @@ from torchtyping import TensorType as TT
 
 
 class AllButTheTop:
-    def __init__(self, components_threshhold: int = 3):
+    def __init__(self, components_threshhold: int = 3, **kwargs):
         self.components_threshhold = components_threshhold
         self.pca = PCA(n_components=components_threshhold, random_state=0)
         self.is_fitted = False

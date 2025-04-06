@@ -1,0 +1,1 @@
+{"model_name": "GoogleNews-vectors-negative300-torch", "whitening_name": "uniform_pca", "pooling_mode": "whitening", "sym1": 0.748259425163269, "sym2": 0.8929184675216675, "sym1_uniform": 1.0, "sym2_uniform": 0.9999999403953552, "cosine": 0.9977041858437588, "iso_score": 0.9999999999972023}

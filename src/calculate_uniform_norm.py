@@ -32,32 +32,33 @@ from modeling import CustomPooling
 from SIF import SIF
 from zipfian_whitening import UniformWhitening, ZipfianWhitening
 
-# Downloaded from: https://github.com/kawine/usif/raw/71ffef5b6d7295c36354136bfc6728a10bd25d32/enwiki_vocab_min200.txt
-PATH_ENWIKI_VOCAB_MIN200 = "data/enwiki_vocab_min200/enwiki vocab min200.txt"
-TRANSFORM_CONFIG = {
-    "normal": {
-        "whitening_transformer_class": None,
-        "pooling": ["mean"],
-    },  # no whitening. normal mean pooling.
-    "uniform_whitening": {
-        "whitening_transformer_class": UniformWhitening,
-        "pooling": ["centering_only", "whitening"],
-    },
-    "zipfian_whitening": {
-        "whitening_transformer_class": ZipfianWhitening,
-        "pooling": ["centering_only", "whitening"],
-    },
-    "abtp": {
-        "whitening_transformer_class": AllButTheTop,
-        "pooling": ["component_removal"],
-    },
-}
+# # Downloaded from: https://github.com/kawine/usif/raw/71ffef5b6d7295c36354136bfc6728a10bd25d32/enwiki_vocab_min200.txt
+# PATH_ENWIKI_VOCAB_MIN200 = "data/enwiki_vocab_min200/enwiki vocab min200.txt"
+# TRANSFORM_CONFIG = {
+#     "normal": {
+#         "whitening_transformer_class": None,
+#         "pooling": ["mean"],
+#     },  # no whitening. normal mean pooling.
+#     "uniform_whitening": {
+#         "whitening_transformer_class": UniformWhitening,
+#         "pooling": ["centering_only", "whitening"],
+#     },
+#     "zipfian_whitening": {
+#         "whitening_transformer_class": ZipfianWhitening,
+#         "pooling": ["centering_only", "whitening"],
+#     },
+#     "abtp": {
+#         "whitening_transformer_class": AllButTheTop,
+#         "pooling": ["component_removal"],
+#     },
+# }
 
 
-def main(model_name: str, topk: Optional[int] = None) -> None:
+def main(model_name: str, whitening_mode: str, topk: Optional[int] = None) -> None:
     print(f"topk: {topk}")
     embedding_layer_index = 0
     pooling_layer_index = 1
+    whitening_mode = whitening_mode.lower()
 
     if model_name == "models/GoogleNews-vectors-negative300":
         model: SentenceTransformer = load_word2vec_model(
@@ -102,7 +103,7 @@ def main(model_name: str, topk: Optional[int] = None) -> None:
     }
 
     # Fit Uniform whitening
-    whitening_transformer = UniformWhitening().fit(embedding_for_whitening, p=None)
+    whitening_transformer = UniformWhitening(mode=whitening_mode).fit(embedding_for_whitening, p=None)
 
     # Apply Uniform whitening to word embeddings
     original_word_embeddings = model[embedding_layer_index].emb_layer.weight
@@ -110,7 +111,7 @@ def main(model_name: str, topk: Optional[int] = None) -> None:
     # 1. Centering
     original_word_embeddings -= whitening_transformer.mu
     norm = torch.linalg.norm(original_word_embeddings, dim=1)
-    save_path = f"data/norm/uniform/centering/{model_name.split('/')[-1]}.pt"
+    save_path = f"data/norm/uniform_{whitening_mode}/centering/{model_name.split('/')[-1]}.pt"
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
     torch.save(norm, save_path)
 
@@ -119,7 +120,7 @@ def main(model_name: str, topk: Optional[int] = None) -> None:
         original_word_embeddings @ whitening_transformer.transformation_matrix
     )
     norm = torch.linalg.norm(original_word_embeddings, dim=1)
-    save_path = f"data/norm/uniform/whitening/{model_name.split('/')[-1]}.pt"
+    save_path = f"data/norm/uniform_{whitening_mode}/whitening/{model_name.split('/')[-1]}.pt"
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
     torch.save(norm, save_path)
 
