@@ -1,0 +1,162 @@
+{
+  "dataset_revision": "af5e6fb845001ecf41f4c1e033ce921939a2a68d",
+  "mteb_dataset_name": "STS17",
+  "mteb_version": "1.10.1",
+  "test": {
+    "ar-ar": {
+      "cos_sim": {
+        "pearson": 0.02653676683166999,
+        "spearman": 0.020277320480735907
+      },
+      "euclidean": {
+        "pearson": 0.059361617649187765,
+        "spearman": 0.021170289148598597
+      },
+      "manhattan": {
+        "pearson": 0.05656385515293274,
+        "spearman": 0.021170289148598597
+      }
+    },
+    "en-ar": {
+      "cos_sim": {
+        "pearson": 0.06493674186793366,
+        "spearman": 0.08177065084731182
+      },
+      "euclidean": {
+        "pearson": -0.05107440478940988,
+        "spearman": -0.07478557823066721
+      },
+      "manhattan": {
+        "pearson": -0.10873408544350102,
+        "spearman": -0.14897687573461554
+      }
+    },
+    "en-de": {
+      "cos_sim": {
+        "pearson": 0.1260680783180596,
+        "spearman": 0.10649206731986446
+      },
+      "euclidean": {
+        "pearson": 0.06842812412845614,
+        "spearman": 0.04514737492363143
+      },
+      "manhattan": {
+        "pearson": 0.05845251966459734,
+        "spearman": 0.03558089795705488
+      }
+    },
+    "en-en": {
+      "cos_sim": {
+        "pearson": 0.5589945170028798,
+        "spearman": 0.5922605941203781
+      },
+      "euclidean": {
+        "pearson": 0.5536121562769274,
+        "spearman": 0.5479827589426214
+      },
+      "manhattan": {
+        "pearson": 0.5771090898865588,
+        "spearman": 0.5691584002139698
+      }
+    },
+    "en-tr": {
+      "cos_sim": {
+        "pearson": 0.029573482093468575,
+        "spearman": 0.026994465486452953
+      },
+      "euclidean": {
+        "pearson": -0.0791473343761775,
+        "spearman": -0.10271099612944254
+      },
+      "manhattan": {
+        "pearson": -0.08839290383671437,
+        "spearman": -0.11254575980436231
+      }
+    },
+    "es-en": {
+      "cos_sim": {
+        "pearson": 0.09389473738258684,
+        "spearman": 0.10093213497363429
+      },
+      "euclidean": {
+        "pearson": 0.004812622923049287,
+        "spearman": 0.040010873184761354
+      },
+      "manhattan": {
+        "pearson": -0.006333582614055299,
+        "spearman": 0.03137269489096644
+      }
+    },
+    "es-es": {
+      "cos_sim": {
+        "pearson": 0.5857631632028987,
+        "spearman": 0.6243307574087804
+      },
+      "euclidean": {
+        "pearson": 0.5934176856232098,
+        "spearman": 0.6168759642317928
+      },
+      "manhattan": {
+        "pearson": 0.5957150956790221,
+        "spearman": 0.6202586338339985
+      }
+    },
+    "evaluation_time": 1.32,
+    "fr-en": {
+      "cos_sim": {
+        "pearson": 0.10958572963798506,
+        "spearman": 0.10531196990806753
+      },
+      "euclidean": {
+        "pearson": 0.03213251238952743,
+        "spearman": 0.03574080692230163
+      },
+      "manhattan": {
+        "pearson": 0.009039134444253324,
+        "spearman": 0.0013473099115140755
+      }
+    },
+    "it-en": {
+      "cos_sim": {
+        "pearson": 0.08963958787382449,
+        "spearman": 0.06937934910678002
+      },
+      "euclidean": {
+        "pearson": 0.0045893284902228755,
+        "spearman": -0.01653712402375094
+      },
+      "manhattan": {
+        "pearson": -0.006334469428915794,
+        "spearman": -0.02842650934846716
+      }
+    },
+    "ko-ko": {
+      "cos_sim": {
+        "pearson": 0.025361685916206,
+        "spearman": 0.02161606330462413
+      },
+      "euclidean": {
+        "pearson": 0.025953123910484946,
+        "spearman": 0.018101611657848515
+      },
+      "manhattan": {
+        "pearson": 0.026844602296010614,
+        "spearman": 0.018015500033575035
+      }
+    },
+    "nl-en": {
+      "cos_sim": {
+        "pearson": 0.0850464004501514,
+        "spearman": 0.10062848232978296
+      },
+      "euclidean": {
+        "pearson": 0.01888751874708467,
+        "spearman": 0.014620522820096392
+      },
+      "manhattan": {
+        "pearson": 0.002779715712036431,
+        "spearman": -0.001092839394703143
+      }
+    }
+  }
+}

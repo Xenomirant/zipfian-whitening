@@ -8,12 +8,12 @@ for MODEL_NAME in $MODEL_NAMES; do
                 echo "MODEL_NAME: $MODEL_NAME"
                 echo "POOLING_NAME: $POOLING_NAME"
                 echo "WHITENING_MODE: $WHITENING_MODE"
-                python evaluation.py --model_name_or_path "$MODEL_NAME" --pooler "$POOLING_NAME" --whitening_mode "$WHITENING_MODE" --task_set sts --mode test
+                python evaluation.py --model_name_or_path "$MODEL_NAME" --pooler "$POOLING_NAME" --whitening_mode "$WHITENING_MODE" --task_set full --mode test
             done
         else
             echo "MODEL_NAME: $MODEL_NAME"
             echo "POOLING_NAME: $POOLING_NAME"
-            python evaluation.py --model_name_or_path "$MODEL_NAME" --pooler "$POOLING_NAME" --task_set sts --mode test
+            python evaluation.py --model_name_or_path "$MODEL_NAME" --pooler "$POOLING_NAME" --task_set full --mode test
         fi
     done
 done

@@ -1,1 +1,1 @@
-{"model_name": "fasttext-en-subword-torch", "whitening_name": "normal", "pooling_mode": "mean", "sym1": 0.4570229649543762, "sym2": 0.7024487853050232, "sym1_uniform": 0.5603232383728027, "sym2_uniform": 0.9230116605758667, "cosine": 0.8005722656846046, "iso_score": 0.2869236940589109}
+{"model_name": "fasttext-en-subword-torch", "whitening_name": "normal", "pooling_mode": "mean", "sym1": 0.4570229649543762, "sym2": 0.7024487853050232, "sym1_uniform": 0.5603232383728027, "sym2_uniform": 0.9230116605758667, "cosine": 0.8051400365417496, "iso_score": 0.2869236940589109}

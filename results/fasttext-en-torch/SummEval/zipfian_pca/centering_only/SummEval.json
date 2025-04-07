@@ -1,0 +1,16 @@
+{
+  "dataset_revision": "cda12ad7615edc362dbf25a00fdd61d3b1eaf93c",
+  "mteb_dataset_name": "SummEval",
+  "mteb_version": "1.10.1",
+  "test": {
+    "cos_sim": {
+      "pearson": 0.29738607418810586,
+      "spearman": 0.3018801614447858
+    },
+    "dot": {
+      "pearson": 0.19836628920300747,
+      "spearman": 0.24122096405081903
+    },
+    "evaluation_time": 1.4
+  }
+}

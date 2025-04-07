@@ -10,6 +10,13 @@ from mteb.tasks import (
     STSBenchmarkSTS,
     SickrSTS,
     JSTS,
+    STS17Crosslingual,
+    STS22CrosslingualSTS,
+    ArxivClusteringS2S,
+    TwitterSemEval2015PC,
+    MedrxivClusteringS2S,
+    SummEvalSummarization,
+    AmazonCounterfactualClassification
 )
 from sentence_transformers import SentenceTransformer
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -29,6 +36,13 @@ TASK_NAME_TO_DATASET = {
     "STSBenchmark": STSBenchmarkSTS,
     "SICK-R": SickrSTS,
     "JSTS": JSTS,
+    "STS17": STS17Crosslingual,
+    "STS22": STS22CrosslingualSTS,
+    "ArxivClusteringS2S": ArxivClusteringS2S,
+    "TwitterSemEval2015": TwitterSemEval2015PC,
+    "MedrxivClusteringS2S": MedrxivClusteringS2S,
+    "SummEval": SummEvalSummarization,
+    "AmazonCounterfactualClassification": AmazonCounterfactualClassification
 }
 
 

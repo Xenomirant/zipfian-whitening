@@ -1,1 +1,1 @@
-{"model_name": "fasttext-en-torch", "whitening_name": "uniform_pca", "pooling_mode": "whitening", "sym1": 0.7053570747375488, "sym2": 0.8572201132774353, "sym1_uniform": 0.9999999403953552, "sym2_uniform": 0.9999999403953552, "cosine": 0.9990816143021221, "iso_score": 0.9999999999970628}
+{"model_name": "fasttext-en-torch", "whitening_name": "uniform_pca", "pooling_mode": "whitening", "sym1": 0.7053570747375488, "sym2": 0.8572201132774353, "sym1_uniform": 0.9999999403953552, "sym2_uniform": 0.9999999403953552, "cosine": 0.9996225565568613, "iso_score": 0.9999999999970628}

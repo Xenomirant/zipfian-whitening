@@ -139,14 +139,13 @@ TASK_NAME_TO_SPLIT_NAME = {
     "STS15": "test",
     "STS16": "test",
     "STS17": "test",
-    "STS22.v2": "test",
-    "ArXivHierarchicalClusteringS2S": "test",
+    "STS22": "test",
+    "ArxivClusteringS2S": "test",
     "TwitterSemEval2015": "test",
-    "MedrxivClusteringS2S.v2": "test",
-    "SummEvalSummarization.v2": "test",
-    "Touche2020Retrieval.v3": "test",
+    "MedrxivClusteringS2S": "test",
+    "SummEval": "test",
     "AmazonCounterfactualClassification": "test"
-}`
+}
 
 
 def evaluate(
@@ -218,6 +217,13 @@ def main(
         "STS14",
         "STS15",
         "STS16",
+        "STS17",
+        "STS22",
+        "ArxivClusteringS2S",
+        "TwitterSemEval2015",
+        "MedrxivClusteringS2S",
+        "SummEval",
+        "AmazonCounterfactualClassification"
     ],
     topk: Optional[int] = None,
     in_batch: bool = False,
@@ -365,6 +371,7 @@ def main(
     model.tokenizer.original_tokenizer.stop_words = {  # HACK: Setting unused words (i.e., w with p(w)=0) as stop words. The model ignores these tokens.
         model.tokenizer.vocab[index] for index in unsued_vocab_ids
     }
+
     for task_name in task_names:
         sif = SIF(
             model, task_name=task_name, data_split=TASK_NAME_TO_SPLIT_NAME[task_name]

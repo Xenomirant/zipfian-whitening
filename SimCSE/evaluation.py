@@ -9,6 +9,7 @@ import numpy as np
 import torch
 import transformers
 from prettytable import PrettyTable
+import pathlib
 from transformers import AutoModel, AutoTokenizer
 
 from zipfian_whitening.whitening import (
@@ -564,6 +565,18 @@ def main():
         scores.append("%.2f" % (sum([float(score) for score in scores]) / len(scores)))
         print_table(task_names, scores)
 
+    save_path = pathlib.Path("results")\
+        .joinpath(f"{args.model_name_or_path}")\
+        .joinpath(f"{args.pooler}")\
+        .joinpath(f"{args.whitening_mode if args.whitening_mode is not None else 'normal'}")
+    save_path.mkdir(exist_ok=True, parents=True)
+    save_results = {}
+
+    for task, score in zip(task_names, scores):
+        save_results[task] = score
+
+    with open(save_path.joinpath(f"{args.task_set}.json"), "w") as f:
+        json.dump(save_results, f)
 
 if __name__ == "__main__":
     main()

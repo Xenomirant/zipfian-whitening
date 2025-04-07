@@ -82,34 +82,6 @@ TRANSFORM_CONFIG = {
 # Downloaded from: https://github.com/kawine/usif/raw/71ffef5b6d7295c36354136bfc6728a10bd25d32/enwiki_vocab_min200.txt
 PATH_ENWIKI_VOCAB_MIN200 = "data/enwiki_vocab_min200/enwiki vocab min200.txt"
 
-# TASK_NAME_TO_SPLIT_NAME = {
-#     "STSBenchmark": "test",
-#     "SICK-R": "test",
-#     "STS12": "test",
-#     "STS13": "test",
-#     "STS14": "test",
-#     "STS15": "test",
-#     "STS16": "test",
-# }
-
-TASK_NAME_TO_SPLIT_NAME = {
-    "STSBenchmark": "test",
-    "SICK-R": "test",
-    "STS12": "test",
-    "STS13": "test",
-    "STS14": "test",
-    "STS15": "test",
-    "STS16": "test",
-    "STS17": "test",
-    "STS22.v2": "test",
-    "ArXivHierarchicalClusteringS2S": "test",
-    "TwitterSemEval2015": "test",
-    "MedrxivClusteringS2S.v2": "test",
-    "SummEvalSummarization.v2": "test",
-    "Touche2020Retrieval.v3": "test",
-    "AmazonCounterfactualClassification": "test"
-}
-
 
 def cos_sim(v1, v2):
     return torch.dot(v1, v2) / (torch.linalg.norm(v1) * torch.linalg.norm(v2))
@@ -169,7 +141,7 @@ def cos_sim(v1, v2):
 
 
 # used running mean insted of concatination
-def calc_cosine_score(W: torch.Tensor, n: int = 4) -> float:
+def calc_cosine_score(W: torch.Tensor, n: int = 16) -> float:
     # XXX: If CUDA OOM error occurs, enlarge the n value.
 
     # Normalize the vectors
