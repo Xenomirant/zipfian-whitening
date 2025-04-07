@@ -36,7 +36,7 @@ def main(
     embedding_layer_index = 0
     pooling_layer_index = 1
 
-    if model_name == "models/GoogleNews-vectors-negative300-torch":
+    if model_name != "sentence-transformers/average_word_embeddings_glove.840B.300d":
         model: SentenceTransformer = load_word2vec_model(model_name)
     else:
         model = SentenceTransformer(model_name)
