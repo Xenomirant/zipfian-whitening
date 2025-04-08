@@ -10,6 +10,7 @@ This repository mainly consists of two parts: experiments for static word embedd
 .
 ├── data # dataset files for static word embeddings experiments
 ├── notebooks # notebooks for visualization for static word embeddings experiments
+    ├── figs visualizations and graphs obtained through reproduction
 ├── results # results for static word embeddings experiments
 ├── scripts # scripts for running experiments for static word embeddings
 ├── src # source code for static word embeddings experiments
