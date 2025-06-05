@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 from typing import Optional, Tuple, Type, Union
+import json
 
 import numpy as np
 import torch
@@ -35,6 +36,13 @@ def print_table(task_names, scores):
     tb.field_names = task_names
     tb.add_row(scores)
     print(tb)
+    
+    # Save table data to JSON
+    table_data = {
+        "headers": task_names,
+        "scores": scores
+    }
+    return table_data
 
 
 class WhiteningMatrixCalculator(object):
@@ -509,7 +517,7 @@ def main():
                 scores.append("%.2f" % (results[task]["dev"]["spearman"][0] * 100))
             else:
                 scores.append("0.00")
-        print_table(task_names, scores)
+        sts_table = print_table(task_names, scores)
 
         task_names = []
         scores = []
@@ -521,7 +529,20 @@ def main():
                 scores.append("0.00")
         task_names.append("Avg.")
         scores.append("%.2f" % (sum([float(score) for score in scores]) / len(scores)))
-        print_table(task_names, scores)
+        transfer_table = print_table(task_names, scores)
+
+        # Save tables to JSON
+        save_path = pathlib.Path("results")\
+            .joinpath(f"{args.model_name_or_path}")\
+            .joinpath(f"{args.pooler}")\
+            .joinpath(f"{args.whitening_mode if args.whitening_mode is not None else 'normal'}")
+        save_path.mkdir(exist_ok=True, parents=True)
+        
+        with open(save_path.joinpath(f"{args.task_set}_tables.json"), "w") as f:
+            json.dump({
+                "sts_table": sts_table,
+                "transfer_table": transfer_table
+            }, f, indent=2)
 
     elif args.mode == "test" or args.mode == "fasttest":
         print("------ %s ------" % (args.mode))
@@ -551,7 +572,7 @@ def main():
                 scores.append("0.00")
         task_names.append("Avg.")
         scores.append("%.2f" % (sum([float(score) for score in scores]) / len(scores)))
-        print_table(task_names, scores)
+        sts_table = print_table(task_names, scores)
 
         task_names = []
         scores = []
@@ -563,20 +584,20 @@ def main():
                 scores.append("0.00")
         task_names.append("Avg.")
         scores.append("%.2f" % (sum([float(score) for score in scores]) / len(scores)))
-        print_table(task_names, scores)
+        transfer_table = print_table(task_names, scores)
 
-    save_path = pathlib.Path("results")\
-        .joinpath(f"{args.model_name_or_path}")\
-        .joinpath(f"{args.pooler}")\
-        .joinpath(f"{args.whitening_mode if args.whitening_mode is not None else 'normal'}")
-    save_path.mkdir(exist_ok=True, parents=True)
-    save_results = {}
-
-    for task, score in zip(task_names, scores):
-        save_results[task] = score
-
-    with open(save_path.joinpath(f"{args.task_set}.json"), "w") as f:
-        json.dump(save_results, f)
+        # Save tables to JSON
+        save_path = pathlib.Path("results")\
+            .joinpath(f"{args.model_name_or_path}")\
+            .joinpath(f"{args.pooler}")\
+            .joinpath(f"{args.whitening_mode if args.whitening_mode is not None else 'normal'}")
+        save_path.mkdir(exist_ok=True, parents=True)
+        
+        with open(save_path.joinpath(f"{args.task_set}_tables.json"), "w") as f:
+            json.dump({
+                "sts_table": sts_table,
+                "transfer_table": transfer_table
+            }, f, indent=2)
 
 if __name__ == "__main__":
     main()

@@ -12,6 +12,8 @@ def load_zipfian_whitening_norm(whitening_mode: str, model_name: str) -> TT["num
     """
     Helper function to load the zipfian whitening norm for the given model.
     """
+    if "_in_batch" in model_name:
+        model_name = model_name.split("_in_batch")[0]
     load_path = f"data/norm/zipfian_{whitening_mode}/whitening/{model_name}.pt"
     return torch.load(load_path)
 
@@ -20,6 +22,8 @@ def load_uniform_centering_norm(whitening_mode: str, model_name: str) -> TT["num
     """
     Helper function to load the uniform centering norm for the given model.
     """
+    if "_in_batch" in model_name:
+        model_name = model_name.split("_in_batch")[0]
     load_path = f"data/norm/uniform_{whitening_mode}/centering/{model_name}.pt"
     return torch.load(load_path)
 
@@ -28,6 +32,8 @@ def load_uniform_whitening_norm(whitening_mode: str, model_name: str) -> TT["num
     """
     Helper function to load the uniform whitening norm for the given model.
     """
+    if "_in_batch" in model_name:
+        model_name = model_name.split("_in_batch")[0]
     load_path = f"data/norm/uniform_{whitening_mode}/whitening/{model_name}.pt"
     return torch.load(load_path)
 

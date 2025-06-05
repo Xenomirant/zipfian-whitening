@@ -25,6 +25,7 @@ from eval_utils import (
     UnigramProb,
     WrappedTokenizer,
     load_unigram_prob_enwiki_vocab_min200,
+    load_unigram_prob_ruvocab,
     load_word2vec_model,
     remove_unused_words,
 )
@@ -53,6 +54,14 @@ from zipfian_whitening import UniformWhitening, ZipfianWhitening
 #     },
 # }
 
+MODEL_NAME_TO_FREQ_FUNC = {
+    "models/GoogleNews-vectors-negative300-torch": load_unigram_prob_enwiki_vocab_min200,
+    "models/fasttext-en-torch": load_unigram_prob_enwiki_vocab_min200,
+    "models/fasttext-en-subword-torch": load_unigram_prob_enwiki_vocab_min200,
+    "sentence-transformers/average_word_embeddings_glove.840B.300d": load_unigram_prob_enwiki_vocab_min200,
+    "models/fasttext-ru-torch": load_unigram_prob_ruvocab,
+    "models/geowac_tokens_none_fasttextskipgram_300_5_2020-torch": load_unigram_prob_ruvocab
+}
 
 def main(model_name: str, whitening_mode: str, topk: Optional[int] = None) -> None:
     print(f"topk: {topk}")
@@ -69,6 +78,8 @@ def main(model_name: str, whitening_mode: str, topk: Optional[int] = None) -> No
         or model_name == "models/fasttext-ja-torch"
         or model_name == "models/fasttext-en-torch"
         or model_name == "models/fasttext-en-subword-torch"
+        or model_name == "models/fasttext-ru-torch"
+        or model_name == "models/geowac_tokens_none_fasttextskipgram_300_5_2020-torch"
     ):
         model: SentenceTransformer = load_word2vec_model(
             model_name, from_text_file=False
@@ -80,7 +91,8 @@ def main(model_name: str, whitening_mode: str, topk: Optional[int] = None) -> No
     model.tokenizer.do_lower_case = True
     model.tokenizer = WrappedTokenizer(model.tokenizer)
     model_vocab_size = model[embedding_layer_index].emb_layer.weight.shape[0]
-    unigramprob: UnigramProb = load_unigram_prob_enwiki_vocab_min200(
+    unigramprob: UnigramProb = MODEL_NAME_TO_FREQ_FUNC.get(
+        model_name, "models/fasttext-en-torch")(
         model.tokenizer, model_vocab_size, topk=topk
     )
     unigramprob_tensor: TT["num_words"] = unigramprob.prob.to(model.device)

@@ -26,6 +26,8 @@ from eval_utils import (
     load_word2vec_model,
     load_fasttext_model,
     remove_unused_words,
+    load_unigram_prob_jawiki_top_20k,
+    load_unigram_prob_ruvocab
 )
 from IsoScore import IsoScore
 from SIF import SIF
@@ -77,11 +79,21 @@ TRANSFORM_CONFIG = {
     "abtp": {
         "whitening_transformer_class": AllButTheTop,
         "pooling": ["component_removal"],
-    },
+    }
 }
 # Downloaded from: https://github.com/kawine/usif/raw/71ffef5b6d7295c36354136bfc6728a10bd25d32/enwiki_vocab_min200.txt
 PATH_ENWIKI_VOCAB_MIN200 = "data/enwiki_vocab_min200/enwiki vocab min200.txt"
+PATH_RUVOCAB = "data/ruwiki_vocab/ruvocab.txt"
 
+MODEL_NAME_TO_FREQ_FUNC = {
+    "models/GoogleNews-vectors-negative300-torch": load_unigram_prob_enwiki_vocab_min200,
+    "models/fasttext-ja-torch": load_unigram_prob_jawiki_top_20k,
+    "models/fasttext-en-torch": load_unigram_prob_enwiki_vocab_min200,
+    "models/fasttext-en-subword-torch": load_unigram_prob_enwiki_vocab_min200,
+    "sentence-transformers/average_word_embeddings_glove.840B.300d": load_unigram_prob_enwiki_vocab_min200,
+    "models/fasttext-ru-torch": load_unigram_prob_ruvocab,
+    "models/geowac_tokens_none_fasttextskipgram_300_5_2020-torch": load_unigram_prob_ruvocab
+}
 
 def cos_sim(v1, v2):
     return torch.dot(v1, v2) / (torch.linalg.norm(v1) * torch.linalg.norm(v2))
@@ -289,6 +301,7 @@ def evaluate_isotropy_scores(
     }
     with open(save_dir / "isotropy_scores.json", "w") as f:
         json.dump(results, f)
+    torch.save(embedding_matrix, f"{save_dir}/emb_matrix.pt", )
 
     pprint(results)
 
@@ -305,6 +318,8 @@ def main(model_name: str, topk: Optional[int] = None) -> None:
         or model_name == "models/fasttext-ja-torch"
         or model_name == "models/fasttext-en-torch"
         or model_name == "models/fasttext-en-subword-torch"
+        or model_name == "models/fasttext-ru-torch"
+        or model_name == "models/geowac_tokens_none_fasttextskipgram_300_5_2020-torch"
     ):
         model: SentenceTransformer = load_word2vec_model(
             model_name, from_text_file=False
@@ -319,7 +334,7 @@ def main(model_name: str, topk: Optional[int] = None) -> None:
     model.tokenizer.do_lower_case = True
     model.tokenizer = WrappedTokenizer(model.tokenizer)
     model_vocab_size = model[embedding_layer_index].emb_layer.weight.shape[0]
-    unigramprob: UnigramProb = load_unigram_prob_enwiki_vocab_min200(
+    unigramprob: UnigramProb = MODEL_NAME_TO_FREQ_FUNC[model_name](
         model.tokenizer, model_vocab_size, topk=topk
     )
     unigramprob_tensor: TT["num_words"] = unigramprob.prob.to(model.device)
@@ -371,7 +386,7 @@ def main(model_name: str, topk: Optional[int] = None) -> None:
             evaluate_isotropy_scores(**params)
 
     # SIF
-    unigramprob: UnigramProb = load_unigram_prob_enwiki_vocab_min200(
+    unigramprob: UnigramProb = MODEL_NAME_TO_FREQ_FUNC[model_name](
         model.tokenizer, model_vocab_size, topk=topk
     )
     unsued_vocab_ids: set[int] = unigramprob.unused_vocab_ids

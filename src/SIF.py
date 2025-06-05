@@ -16,7 +16,14 @@ from mteb.tasks import (
     TwitterSemEval2015PC,
     MedrxivClusteringS2S,
     SummEvalSummarization,
-    AmazonCounterfactualClassification
+    AmazonCounterfactualClassification,
+    RuSTSBenchmarkSTS,
+    TERRa,
+    GeoreviewClassification,
+    HeadlineClassification,
+    KinopoiskClassification,
+    RuReviewsClassification,
+    InappropriatenessClassification
 )
 from sentence_transformers import SentenceTransformer
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -42,7 +49,14 @@ TASK_NAME_TO_DATASET = {
     "TwitterSemEval2015": TwitterSemEval2015PC,
     "MedrxivClusteringS2S": MedrxivClusteringS2S,
     "SummEval": SummEvalSummarization,
-    "AmazonCounterfactualClassification": AmazonCounterfactualClassification
+    "AmazonCounterfactualClassification": AmazonCounterfactualClassification,
+    "RuSTSBenchmarkSTS": RuSTSBenchmarkSTS,
+    "TERRa": TERRa,
+    "GeoreviewClassification": GeoreviewClassification,
+    "HeadlineClassification": HeadlineClassification,
+    "KinopoiskClassification": KinopoiskClassification,
+    "RuReviewsClassification": RuReviewsClassification,
+    "InappropriatenessClassification": InappropriatenessClassification,
 }
 
 
@@ -63,12 +77,15 @@ class SIF:
         self.a = a
         self.is_fitted = False
         self.model = model
+        self.in_batch = kwargs.get("in_batch", False)
 
         task_class = TASK_NAME_TO_DATASET[task_name]
         task = task_class()
         task.load_data()
         self.dataset = task.dataset[data_split]
-        self.sentences = self.dataset["sentence1"] + self.dataset["sentence2"]
+        self.sentences = self.dataset["sentence1"] + self.dataset["sentence2"] if task_name not in \
+        ["GeoreviewClassification", "HeadlineClassification", "InappropriatenessClassification", "KinopoiskClassification", "RuReviewsClassification"] \
+        else self.dataset["text"]
         self.num_sentences = len(self.sentences)
         self.word_embedding_dimension = model[
             embedding_layer_index

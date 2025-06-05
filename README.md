@@ -1,6 +1,6 @@
 # Zipfian Whitening
 
-This repository contains the code for the NeurIPS 2024 paper [Zipfian Whitening](https://openreview.net/forum?id=pASJxzMJb7) by Sho Yokoi, Han Bao, Hiroto Kurita and Hidetoshi Shimodaira.
+This repository contains the code for the NeurIPS 2024 paper [Zipfian Whitening](https://openreview.net/forum?id=pASJxzMJb7) by Sho Yokoi, Han Bao, Hiroto Kurita and Hidetoshi Shimodaira, adapted and modified for evaluation on Russian language by Sergei Kudriashov.
 
 ## Overview
 This repository mainly consists of two parts: experiments for static word embeddings and transformer-based embeddings.

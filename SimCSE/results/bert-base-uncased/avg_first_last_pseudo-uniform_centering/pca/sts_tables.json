@@ -1,0 +1,46 @@
+{
+  "sts_table": {
+    "headers": [
+      "STS12",
+      "STS13",
+      "STS14",
+      "STS15",
+      "STS16",
+      "STSBenchmark",
+      "SICKRelatedness",
+      "Avg."
+    ],
+    "scores": [
+      "47.51",
+      "64.53",
+      "54.68",
+      "72.19",
+      "69.28",
+      "59.77",
+      "64.04",
+      "61.71"
+    ]
+  },
+  "transfer_table": {
+    "headers": [
+      "MR",
+      "CR",
+      "SUBJ",
+      "MPQA",
+      "SST2",
+      "TREC",
+      "MRPC",
+      "Avg."
+    ],
+    "scores": [
+      "0.00",
+      "0.00",
+      "0.00",
+      "0.00",
+      "0.00",
+      "0.00",
+      "0.00",
+      "0.00"
+    ]
+  }
+}

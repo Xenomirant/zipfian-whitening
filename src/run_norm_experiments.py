@@ -23,11 +23,23 @@ from eval_utils import (
     load_unigram_prob_enwiki_vocab_min200,
     load_word2vec_model,
     remove_unused_words,
+    load_unigram_prob_jawiki_top_20k,
+    load_unigram_prob_ruvocab
 )
 from modeling import CustomPooling
 from SIF import SIF
 from zipfian_whitening import UniformWhitening, ZipfianWhitening
 
+
+MODEL_NAME_TO_FREQ_FUNC = {
+    "models/GoogleNews-vectors-negative300-torch": load_unigram_prob_enwiki_vocab_min200,
+    "models/fasttext-ja-torch": load_unigram_prob_jawiki_top_20k,
+    "models/fasttext-en-torch": load_unigram_prob_enwiki_vocab_min200,
+    "models/fasttext-en-subword-torch": load_unigram_prob_enwiki_vocab_min200,
+    "sentence-transformers/average_word_embeddings_glove.840B.300d": load_unigram_prob_enwiki_vocab_min200,
+    "models/fasttext-ru-torch": load_unigram_prob_ruvocab,
+    "models/geowac_tokens_none_fasttextskipgram_300_5_2020-torch": load_unigram_prob_ruvocab
+}
 
 def main(
     model_name: str = "sentence-transformers/average_word_embeddings_glove.840B.300d",
@@ -46,7 +58,7 @@ def main(
     model.tokenizer.do_lower_case = True
     model.tokenizer = WrappedTokenizer(model.tokenizer)
     model_vocab_size = model[embedding_layer_index].emb_layer.weight.shape[0]
-    unigramprob: UnigramProb = load_unigram_prob_enwiki_vocab_min200(
+    unigramprob: UnigramProb = MODEL_NAME_TO_FREQ_FUNC[model_name](
         model.tokenizer, model_vocab_size
     )
     unigramprob_tensor: TT["num_words"] = unigramprob.prob.to(model.device)

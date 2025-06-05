@@ -26,6 +26,7 @@ from eval_utils import (
     load_unigram_prob_enwiki_vocab_min200,
     load_unigram_prob_in_batch,
     load_unigram_prob_jawiki_top_20k,
+    load_unigram_prob_ruvocab,
     load_word2vec_model,
     remove_unused_words,
 )
@@ -103,6 +104,8 @@ MODEL_NAME_TO_WRAPPED_TOKENIZER = {
     "models/fasttext-ja-torch": WrappedTokenizerJA,
     "models/fasttext-en-torch": WrappedTokenizer,
     "models/fasttext-en-subword-torch": WrappedTokenizerSubword,
+    "models/fasttext-ru-torch": WrappedTokenizer,
+    "models/geowac_tokens_none_fasttextskipgram_300_5_2020-torch": WrappedTokenizer
 }
 MODEL_NAME_TO_FREQ_FUNC = {
     "models/GoogleNews-vectors-negative300-torch": load_unigram_prob_enwiki_vocab_min200,
@@ -110,6 +113,8 @@ MODEL_NAME_TO_FREQ_FUNC = {
     "models/fasttext-en-torch": load_unigram_prob_enwiki_vocab_min200,
     "models/fasttext-en-subword-torch": load_unigram_prob_enwiki_vocab_min200,
     "sentence-transformers/average_word_embeddings_glove.840B.300d": load_unigram_prob_enwiki_vocab_min200,
+    "models/fasttext-ru-torch": load_unigram_prob_ruvocab,
+    "models/geowac_tokens_none_fasttextskipgram_300_5_2020-torch": load_unigram_prob_ruvocab
 }
 MODEL_NAME_TO_FREQ_FUNC_IN_BATCH = {
     "models/GoogleNews-vectors-negative300-torch": load_unigram_prob_in_batch,
@@ -117,6 +122,8 @@ MODEL_NAME_TO_FREQ_FUNC_IN_BATCH = {
     "models/fasttext-en-torch": load_unigram_prob_in_batch,
     "models/fasttext-en-subword-torch": load_unigram_prob_in_batch,
     "sentence-transformers/average_word_embeddings_glove.840B.300d": load_unigram_prob_in_batch,
+    "models/fasttext-ru-torch": load_unigram_prob_in_batch,
+    "models/geowac_tokens_none_fasttextskipgram_300_5_2020-torch": load_unigram_prob_in_batch
 }
 
 # TASK_NAME_TO_SPLIT_NAME = {
@@ -138,13 +145,20 @@ TASK_NAME_TO_SPLIT_NAME = {
     "STS14": "test",
     "STS15": "test",
     "STS16": "test",
-    "STS17": "test",
-    "STS22": "test",
-    "ArxivClusteringS2S": "test",
-    "TwitterSemEval2015": "test",
-    "MedrxivClusteringS2S": "test",
-    "SummEval": "test",
-    "AmazonCounterfactualClassification": "test"
+    # "STS17": "en-en",
+    # "STS22": "test",
+    "TERRa": "train",
+    # "ArxivClusteringS2S": "test",
+    # "TwitterSemEval2015": "test",
+    # "MedrxivClusteringS2S": "test",
+    # "SummEval": "test",
+    # "AmazonCounterfactualClassification": "test"
+    "RuSTSBenchmarkSTS": "train",
+    "GeoreviewClassification": "train",
+    "HeadlineClassification": "train",
+    "InappropriatenessClassification": "train",
+    "KinopoiskClassification": "train",
+    "RuReviewsClassification": "train"
 }
 
 
@@ -210,21 +224,39 @@ def evaluate(
 def main(
     model_name: str,
     task_names: List[str] = [
-        "STSBenchmark",
-        "SICK-R",
-        "STS12",
-        "STS13",
-        "STS14",
-        "STS15",
-        "STS16",
-        "STS17",
-        "STS22",
-        "ArxivClusteringS2S",
-        "TwitterSemEval2015",
-        "MedrxivClusteringS2S",
-        "SummEval",
-        "AmazonCounterfactualClassification"
+        # "STSBenchmark",
+        # "SICK-R",
+        # "STS12",
+        # "STS13",
+        # "STS14",
+        # "STS15",
+        # "STS16",
+        # "STS17",
+        # "STS22",
+        # "ArxivClusteringS2S",
+        # "TwitterSemEval2015",
+        # "MedrxivClusteringS2S",
+        # "SummEval",
+        # "AmazonCounterfactualClassification"
+        'GeoreviewClassification', 
+        # 'GeoreviewClusteringP2P',
+        'HeadlineClassification', 
+        'InappropriatenessClassification', 
+        'KinopoiskClassification', 
+        # 'RiaNewsRetrieval', 
+        # 'RuBQRetrieval', 
+        'RuReviewsClassification', 
+        # 'RuSciBenchGRNTIClassification', 
+        # 'RuSciBenchGRNTIClusteringP2P', 
+        # 'RuSciBenchOECDClassification', 
+        # 'RuSciBenchOECDClusteringP2P', 
+        # 'RuSTSBenchmarkSTS', 
+        # 'TERRa', 
+        # 'RuBQReranking', 
+        # 'CEDRClassification', 
+        # 'SensitiveTopicsClassification'
     ],
+    
     topk: Optional[int] = None,
     in_batch: bool = False,
 ) -> None:
@@ -241,6 +273,8 @@ def main(
         or model_name == "models/fasttext-ja-torch"
         or model_name == "models/fasttext-en-torch"
         or model_name == "models/fasttext-en-subword-torch"
+        or model_name == "models/fasttext-ru-torch"
+        or model_name == "models/geowac_tokens_none_fasttextskipgram_300_5_2020-torch"
     ):
         model: SentenceTransformer = load_word2vec_model(
             model_name, from_text_file=False
@@ -388,6 +422,7 @@ def main(
             embedding_layer_index=embedding_layer_index,
             pooling_layer_index=pooling_layer_index,
             topk=topk,
+            in_batch=in_batch
         )
 
 

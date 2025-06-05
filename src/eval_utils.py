@@ -30,6 +30,14 @@ from mteb.tasks import (
     STSBenchmarkSTS,
     SickrSTS,
     JSTS,
+    STS22CrosslingualSTS,
+    RuSTSBenchmarkSTS,
+    TERRa,
+    GeoreviewClassification,
+    HeadlineClassification,
+    KinopoiskClassification,
+    RuReviewsClassification,
+    InappropriatenessClassification
 )
 from tqdm import tqdm
 import fasttext
@@ -37,6 +45,7 @@ import fasttext
 
 PATH_ENWIKI_VOCAB_MIN200 = "data/enwiki_vocab_min200/enwiki vocab min200.txt"
 PATH_JAWIKI_TOP_20K = "data/jawiki_top_20k/ja_wiki_top_20k.txt"
+PATH_RUVOCAB = "data/ruwiki_vocab/ruvocab.txt"
 
 # TODO: to avoid de-duplication, move this to a common place (also used in SIF)
 TASK_NAME_TO_DATASET = {
@@ -48,6 +57,13 @@ TASK_NAME_TO_DATASET = {
     "STSBenchmark": STSBenchmarkSTS,
     "SICK-R": SickrSTS,
     "JSTS": JSTS,
+    "RuSTSBenchmarkSTS": RuSTSBenchmarkSTS,
+    "TERRa": TERRa,
+    "GeoreviewClassification": GeoreviewClassification,
+    "HeadlineClassification": HeadlineClassification,
+    "KinopoiskClassification": KinopoiskClassification,
+    "RuReviewsClassification": RuReviewsClassification,
+    "InappropriatenessClassification": InappropriatenessClassification,
 }
 
 
@@ -287,6 +303,49 @@ def load_unigram_prob_enwiki_vocab_min200(
     return UnigramProb(prob=unigram_prob, unused_vocab_ids=unused_vocab_ids)
 
 
+def load_unigram_prob_ruvocab(
+    tokenizer: Union[
+        sentence_transformers.models.tokenizer.WhitespaceTokenizer, WrappedTokenizer
+    ],
+    model_vocab_size: int,
+    path: str = PATH_RUVOCAB,
+    topk: Optional[int] = None,
+) -> UnigramProb:
+    """
+    Load the unigram probabilities of the words in the vocabulary from the enwiki_vocab_min200.txt file.
+    Only available for glove/word2vec. (Could be used for BERT-based models as well, but subword tokenization cause very sparse unigram probabilities without doing alignment)
+    """
+    frequency_dict: Dict[int, int] = {}
+    # load the frequency of the words in the vocabulary
+    with open(path, "r") as f:
+        for count, line in enumerate(f):
+            word_and_freq = line.rstrip().split(" ")
+            assert (
+                len(word_and_freq) == 2
+            )  # ensuring that the line has only two elements, otherwise the file is not formatted correctly or the line is corrupted
+            word, freq = word_and_freq
+            freq = int(freq)
+            word_id = tokenizer.word2idx[word] if word in tokenizer.word2idx else None
+            if word_id is not None:
+                frequency_dict[word_id] = freq
+            if topk is not None and (count + 1) >= topk:
+                break
+
+    # create a tensor of the unigram probabilities
+    unigram_prob = torch.zeros(model_vocab_size)
+    for word_id, freq in frequency_dict.items():
+        unigram_prob[word_id] = freq
+
+    # normalize the unigram probabilities
+    unigram_prob = unigram_prob / unigram_prob.sum()
+
+    # check the top k most frequent words
+    assert topk is None or len(frequency_dict) == topk
+
+    unused_vocab_ids = set(range(model_vocab_size - 1)) - set(frequency_dict.keys())
+    return UnigramProb(prob=unigram_prob, unused_vocab_ids=unused_vocab_ids)
+
+
 def load_unigram_prob_jawiki_top_20k(
     tokenizer: Union[
         sentence_transformers.models.tokenizer.WhitespaceTokenizer, WrappedTokenizer
@@ -341,8 +400,10 @@ def load_unigram_prob_in_batch(
     task_class = TASK_NAME_TO_DATASET[task_name]
     task = task_class()
     task.load_data()
-    dataset = task.dataset[split]
-    sentences = dataset["sentence1"] + dataset["sentence2"]
+    dataset = task.dataset[split] if task_name != "STS22" else task.dataset["ru"][split]
+    sentences = dataset["sentence1"] + dataset["sentence2"] if task_name not in \
+        ["GeoreviewClassification", "HeadlineClassification", "InappropriatenessClassification", "KinopoiskClassification", "RuReviewsClassification"] \
+        else dataset["text"]
     frequency_dict: Dict[int, int] = {}
     print(f"Calculating the whole dataset freqeucny in {task_name}, {split}...")
     # calculate the frequency of the words in the dataset
